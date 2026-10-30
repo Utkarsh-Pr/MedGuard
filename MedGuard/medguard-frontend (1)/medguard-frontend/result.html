@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Safety Check Result</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-icon" aria-hidden="true">🛡️💊</span> MedGuard
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="prescription.html">Prescription</a>
+      <a href="scan.html">Scan Medicine</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </header>
+
+  <main id="mainContent">
+    <p id="page-announcement" class="visually-hidden"></p>
+
+    <h1 class="page-title">Safety Check Result</h1>
+
+    <div id="resultBanner" class="result-banner">
+      <div class="result-icon" id="resultIcon" aria-hidden="true">✅</div>
+      <div class="badge" id="resultBadge">SAFE / MATCH</div>
+      <p class="result-title" id="resultMessage"></p>
+    </div>
+
+    <div class="preview-wrap">
+      <img id="scannedImage" alt="Photo of the scanned medicine" />
+    </div>
+
+    <section class="card">
+      <h2>Detected Medicine</h2>
+      <table class="data-table">
+        <tbody>
+          <tr><th>Medicine name</th><td id="detectedName">—</td></tr>
+          <tr><th>Confidence</th><td id="detectedConfidence">—</td></tr>
+          <tr><th>Decision margin</th><td id="detectedMargin">—</td></tr>
+          <tr><th>Recognition state</th><td id="classifierState">—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>OCR Details</h2>
+      <table class="data-table">
+        <tbody>
+          <tr><th>Medicine name (from label)</th><td id="ocrName">—</td></tr>
+          <tr><th>Dosage</th><td id="ocrDosage">—</td></tr>
+          <tr><th>Expiry date</th><td id="ocrExpiry">—</td></tr>
+          <tr><th>Batch number</th><td id="ocrBatch">—</td></tr>
+          <tr><th>Text confidence</th><td id="ocrConfidence">—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Image Quality</h2>
+      <p id="imageQuality">—</p>
+      <p id="qualityReasons" class="text-muted"></p>
+    </section>
+
+    <section class="card">
+      <h2>Verification Notes</h2>
+      <p id="verificationReasons">—</p>
+      <details class="mt-2"><summary>OCR text read from the package</summary><pre id="ocrRawText" class="ocr-raw-text">—</pre></details>
+    </section>
+
+    <section class="card">
+      <h2>Compared With Your Prescription</h2>
+      <p id="prescriptionComparison">—</p>
+    </section>
+
+    <div class="row">
+      <button type="button" id="listenBtn" class="btn btn-secondary" style="flex:1;">
+        🔊 Listen to Result
+      </button>
+      <a href="scan.html" class="btn btn-primary" style="flex:1;">
+        🔄 Scan Again
+      </a>
+    </div>
+  </main>
+
+  <button id="accessibilityFab" class="fab" aria-label="Read this page aloud">
+    🔊
+  </button>
+
+  <footer class="app-footer">MedGuard demo frontend — not a real medical device.</footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/result.js"></script>
+</body>
+</html>

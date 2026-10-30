@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Scan History</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-icon" aria-hidden="true">🛡️💊</span> MedGuard
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="prescription.html">Prescription</a>
+      <a href="scan.html">Scan Medicine</a>
+      <a href="history.html" aria-current="page">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </header>
+
+  <main id="mainContent">
+    <p id="page-announcement" class="visually-hidden">
+      Scan history page. Shows your previous medicine scans.
+    </p>
+
+    <h1 class="page-title">Scan History</h1>
+    <p class="page-subtitle">A record of your previous medicine scans.</p>
+
+    <section class="card">
+      <ul id="historyList" class="med-list"></ul>
+      <p id="historyEmpty" class="empty-state" hidden>
+        No scans yet. Go to <a href="scan.html">Scan Medicine</a> to check your first one.
+      </p>
+    </section>
+
+    <!-- Simple detail panel shown when "View Details" is pressed -->
+    <section class="card" id="detailCard" hidden aria-labelledby="detailHeading">
+      <h2 id="detailHeading">Scan Details</h2>
+      <table class="data-table">
+        <tbody>
+          <tr><th>Date &amp; time</th><td id="detailDate">—</td></tr>
+          <tr><th>Medicine</th><td id="detailMedicine">—</td></tr>
+          <tr><th>Result</th><td id="detailResult">—</td></tr>
+          <tr><th>Confidence</th><td id="detailConfidence">—</td></tr>
+        </tbody>
+      </table>
+      <button type="button" id="closeDetailBtn" class="btn btn-secondary mt-2">Close</button>
+    </section>
+  </main>
+
+  <button id="accessibilityFab" class="fab" aria-label="Read this page aloud">
+    🔊
+  </button>
+
+  <footer class="app-footer">MedGuard demo frontend — not a real medical device.</footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

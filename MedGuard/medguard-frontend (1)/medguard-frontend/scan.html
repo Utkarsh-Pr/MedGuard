@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Scan Medicine</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-icon" aria-hidden="true">🛡️💊</span> MedGuard
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="prescription.html">Prescription</a>
+      <a href="scan.html" aria-current="page">Scan Medicine</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </header>
+
+  <main id="mainContent">
+    <p id="page-announcement" class="visually-hidden">
+      Scan medicine page. Upload a photo or use your camera, then press scan.
+    </p>
+
+    <h1 class="page-title">Scan a Medicine</h1>
+    <p class="page-subtitle">
+      Take or upload a clear photo of the medicine strip or box.
+    </p>
+
+    <section class="card">
+      <div id="scanDrop" class="scan-drop">
+        <p><strong>No image selected yet</strong></p>
+        <p class="text-muted">Upload a photo, or use your camera below.</p>
+      </div>
+
+      <div class="preview-wrap" id="previewWrap" hidden>
+        <img id="previewImage" alt="Selected medicine photo preview" />
+      </div>
+
+      <div class="row mt-2">
+        <label class="btn btn-secondary" style="flex:1; cursor:pointer;">
+          📁 Upload Photo
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            class="visually-hidden"
+          />
+        </label>
+        <button type="button" id="cameraBtn" class="btn btn-secondary" style="flex:1;">
+          📷 Use Camera
+        </button>
+      </div>
+
+      <!-- Live camera view, hidden until "Use Camera" is pressed -->
+      <div id="cameraWrap" class="mt-2" hidden>
+        <video id="cameraVideo" autoplay playsinline style="width:100%; border-radius:12px;"></video>
+        <div class="row mt-2">
+          <button type="button" id="captureBtn" class="btn btn-primary" style="flex:1;">
+            Capture Photo
+          </button>
+          <button type="button" id="closeCameraBtn" class="btn btn-secondary" style="flex:1;">
+            Close Camera
+          </button>
+        </div>
+      </div>
+      <canvas id="captureCanvas" class="visually-hidden"></canvas>
+
+      <button type="button" id="scanBtn" class="btn btn-primary btn-block btn-huge mt-3" disabled>
+        🔍 Scan Medicine
+      </button>
+
+      <div id="scanningState" class="center" hidden>
+        <div class="spinner" role="status" aria-live="polite"></div>
+        <p>Scanning medicine… please wait.</p>
+      </div>
+    </section>
+  </main>
+
+  <button id="accessibilityFab" class="fab" aria-label="Read this page aloud">
+    🔊
+  </button>
+
+  <footer class="app-footer">MedGuard demo frontend — not a real medical device.</footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/scan.js"></script>
+</body>
+</html>

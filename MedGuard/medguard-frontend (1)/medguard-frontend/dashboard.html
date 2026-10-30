@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Dashboard</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-icon" aria-hidden="true">🛡️💊</span> MedGuard
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="dashboard.html" aria-current="page">Dashboard</a>
+      <a href="prescription.html">Prescription</a>
+      <a href="scan.html">Scan Medicine</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </header>
+
+  <main id="mainContent">
+    <p id="page-announcement" class="visually-hidden">
+      Dashboard page. Use this page to view today's medicines and start a scan.
+    </p>
+
+    <h1 id="welcomeHeading" class="page-title">Welcome!</h1>
+    <p class="page-subtitle">Here's your medication overview for today.</p>
+
+    <section class="card" aria-labelledby="scanHeading">
+      <h2 id="scanHeading">Scan a Medicine</h2>
+      <p class="text-muted">Check a medicine strip before you take it.</p>
+      <a href="scan.html" class="btn btn-primary btn-block btn-huge">
+        📷 Scan Medicine
+      </a>
+    </section>
+
+    <section class="card" aria-labelledby="todayHeading">
+      <h2 id="todayHeading">Today's Medication Schedule</h2>
+      <ul id="todayList" class="med-list">
+        <!-- filled in by dashboard.js -->
+      </ul>
+      <p id="todayEmpty" class="empty-state" hidden>
+        No medicines scheduled for today yet.
+      </p>
+    </section>
+
+    <section class="card" aria-labelledby="upcomingHeading">
+      <h2 id="upcomingHeading">Upcoming Medicines</h2>
+      <ul id="upcomingList" class="med-list">
+        <!-- filled in by dashboard.js -->
+      </ul>
+      <p id="upcomingEmpty" class="empty-state" hidden>
+        Nothing upcoming right now.
+      </p>
+    </section>
+
+    <section class="row">
+      <a href="prescription.html" class="btn btn-secondary" style="flex:1;">
+        📋 Prescriptions
+      </a>
+      <a href="history.html" class="btn btn-secondary" style="flex:1;">
+        🕘 Scan History
+      </a>
+    </section>
+  </main>
+
+  <!-- Floating accessibility / voice button: reads the announcement text -->
+  <button id="accessibilityFab" class="fab" aria-label="Read this page aloud">
+    🔊
+  </button>
+
+  <footer class="app-footer">MedGuard demo frontend — not a real medical device.</footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

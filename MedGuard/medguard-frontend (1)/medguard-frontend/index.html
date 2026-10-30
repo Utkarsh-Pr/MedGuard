@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Sign In</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <main id="mainContent" class="login-wrap">
+    <div class="card login-card">
+      <div class="brand-icon" aria-hidden="true">🛡️💊</div>
+      <h1>MedGuard</h1>
+      <p class="text-muted">AI-Powered Medication Safety Assistant</p>
+
+      <!-- This is a DEMO login: no real authentication, just picking
+           which patient profile to use. In the real product this would
+           be replaced by a proper sign-in connected to the backend. -->
+      <form id="loginForm" class="stack mt-3">
+        <div class="form-group" style="text-align:left;">
+          <label for="patientName">Select or enter patient name</label>
+          <input
+            type="text"
+            id="patientName"
+            name="patientName"
+            placeholder="e.g. Anushka Sharma"
+            list="samplePatients"
+            required
+          />
+          <datalist id="samplePatients">
+            <option value="Meera Sharma"></option>
+            <option value="Ramesh Gupta"></option>
+            <option value="Lakshmi Iyer"></option>
+          </datalist>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-huge">
+          Enter MedGuard
+        </button>
+      </form>
+
+      <p class="text-muted mt-3" style="font-size:0.9rem;">
+        Demo mode — no password needed. Your data stays on this device.
+      </p>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

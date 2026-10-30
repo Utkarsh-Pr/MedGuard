@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Settings</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-icon" aria-hidden="true">🛡️💊</span> MedGuard
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="prescription.html">Prescription</a>
+      <a href="scan.html">Scan Medicine</a>
+      <a href="history.html">History</a>
+      <a href="settings.html" aria-current="page">Settings</a>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </header>
+
+  <main id="mainContent">
+    <p id="page-announcement" class="visually-hidden">
+      Settings page. Adjust text size, contrast, and voice options here.
+    </p>
+
+    <h1 class="page-title">Settings &amp; Accessibility</h1>
+    <p class="page-subtitle">Make MedGuard easier for you to see, read, and hear.</p>
+
+    <section class="card">
+      <div class="settings-row">
+        <div>
+          <strong>Text size</strong>
+          <div class="text-muted">Make text bigger or smaller</div>
+        </div>
+        <div class="stepper">
+          <button type="button" id="decreaseFontBtn" aria-label="Decrease text size">A−</button>
+          <span id="fontScaleLabel">100%</span>
+          <button type="button" id="increaseFontBtn" aria-label="Increase text size">A+</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <strong>High contrast mode</strong>
+          <div class="text-muted">Black background with bright text for easier reading</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="contrastToggle" />
+          <span class="toggle-slider" aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <strong>Voice / speech</strong>
+          <div class="text-muted">Let MedGuard read results and pages aloud</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="voiceToggle" />
+          <span class="toggle-slider" aria-hidden="true"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Try it out</h2>
+      <p>This is sample text so you can see how your settings look.</p>
+      <button type="button" id="testVoiceBtn" class="btn btn-secondary">
+        🔊 Test Voice
+      </button>
+    </section>
+  </main>
+
+  <button id="accessibilityFab" class="fab" aria-label="Read this page aloud">
+    🔊
+  </button>
+
+  <footer class="app-footer">MedGuard demo frontend — not a real medical device.</footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

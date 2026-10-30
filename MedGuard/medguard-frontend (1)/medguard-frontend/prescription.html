@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedGuard — Prescription</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <a class="brand" href="dashboard.html">
+      <span class="brand-icon" aria-hidden="true">🛡️💊</span> MedGuard
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="prescription.html" aria-current="page">Prescription</a>
+      <a href="scan.html">Scan Medicine</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="#" id="logoutLink">Log Out</a>
+    </nav>
+  </header>
+
+  <main id="mainContent">
+    <p id="page-announcement" class="visually-hidden">
+      Doctor prescription entry page. Add or edit the medicines your doctor prescribed.
+    </p>
+
+    <h1 class="page-title">Doctor's Prescription</h1>
+    <p class="page-subtitle">
+      Manually enter each medicine your doctor prescribed. MedGuard will use
+      this list to check medicines you scan later.
+    </p>
+
+    <section class="card" aria-labelledby="formHeading">
+      <h2 id="formHeading">
+        <span id="formModeLabel">Add a Medicine</span>
+      </h2>
+
+      <!-- This form is used for both ADDING a new prescription and EDITING
+           an existing one. prescription.js swaps it between the two modes. -->
+      <form id="prescriptionForm" class="stack">
+        <input type="hidden" id="prescriptionId" />
+
+        <div class="form-group">
+          <label for="medName">Medicine name</label>
+          <input type="text" id="medName" required placeholder="e.g. Metformin" />
+        </div>
+
+        <div class="row">
+          <div class="form-group" style="flex:1;">
+            <label for="medDosage">Strength / dosage</label>
+            <input type="text" id="medDosage" required placeholder="e.g. 500 mg" />
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="medTablets">Number of tablets per dose</label>
+            <input type="number" id="medTablets" min="1" step="1" required value="1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <fieldset>
+            <legend>Time of day</legend>
+            <div class="checkbox-row">
+              <input type="checkbox" id="timeMorning" value="morning" />
+              <label for="timeMorning" style="margin:0;">Morning</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="timeAfternoon" value="afternoon" />
+              <label for="timeAfternoon" style="margin:0;">Afternoon</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="timeEvening" value="evening" />
+              <label for="timeEvening" style="margin:0;">Evening</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="timeNight" value="night" />
+              <label for="timeNight" style="margin:0;">Night</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="form-group">
+          <label for="medFrequency">Frequency</label>
+          <select id="medFrequency" required>
+            <option value="Once daily">Once daily</option>
+            <option value="Twice daily">Twice daily</option>
+            <option value="Thrice daily">Thrice daily</option>
+            <option value="As needed">As needed</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="form-group" style="flex:1;">
+            <label for="medStart">Start date</label>
+            <input type="date" id="medStart" required />
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="medEnd">End date</label>
+            <input type="date" id="medEnd" required />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="saveBtn">
+            Save Prescription
+          </button>
+          <button type="button" class="btn btn-secondary" id="cancelEditBtn" hidden>
+            Cancel Edit
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="listHeading">
+      <h2 id="listHeading">Saved Prescriptions</h2>
+      <ul id="prescriptionList" class="med-list"></ul>
+      <p id="listEmpty" class="empty-state" hidden>
+        No prescriptions saved yet. Add one above.
+      </p>
+    </section>
+  </main>
+
+  <button id="accessibilityFab" class="fab" aria-label="Read this page aloud">
+    🔊
+  </button>
+
+  <footer class="app-footer">MedGuard demo frontend — not a real medical device.</footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/prescription.js"></script>
+</body>
+</html>
