@@ -36,11 +36,12 @@ from sqlalchemy.orm import Session
 import crud
 import models  # noqa: F401 — imported so Base knows about all the tables below
 import schemas
-from ai.classifier import classify_medicine
+from ai.classifier import ModelUnavailable, classify_medicine, model_status
 from ai.image_quality import check_image_quality
 from ai.ocr import extract_text
 from ai.safety import decide_safety
 from database import Base, engine, get_db
+from sqlalchemy import text
 
 # ---------------------------------------------------------------
 # Create the database tables (if they don't already exist).
@@ -146,9 +147,21 @@ def process_medicine_image(image_path: str) -> dict:
     quality = check_image_quality(image_path)
     # Quality is still captured even when unusable. Avoid expensive OCR/model
     # work when it cannot contribute trusted evidence.
-    classification = classify_medicine(image_path) if quality["is_acceptable"] else {"label": "unknown", "confidence": 0.0, "margin": 0.0, "is_unknown": True, "reason": "quality_gate_failed", "catalog_version": None}
+    classification = classify_medicine(image_path) if quality["is_acceptable"] else {"label": "unknown", "experimental_label": None, "confidence": 0.0, "margin": 0.0, "is_unknown": True, "reason": "quality_gate_failed", "catalog_version": None}
     ocr_result = extract_text(image_path) if quality["is_acceptable"] else {"raw_text": "", "medicine_name": None, "composition": None, "strength": None, "expiry_date": None, "batch_number": None, "confidence": 0.0, "is_legible": False, "failure_reasons": ["quality_gate_failed"]}
     return {"quality": quality, "classifier": classification, "ocr": ocr_result}
+
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    """Readiness endpoint used by the frontend before an upload."""
+    database_ready = True
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        database_ready = False
+    model = model_status()
+    return {"ready": database_ready and model["ready"], "databaseReady": database_ready, "model": model}
 
 
 @app.post("/scan", response_model=schemas.ScanResult)
@@ -177,7 +190,10 @@ async def scan_medicine(
         shutil.copyfileobj(image.file, buffer)
 
     # ---- Step A: collect model/OCR/quality evidence ----
-    ai_result = process_medicine_image(saved_path)
+    try:
+        ai_result = process_medicine_image(saved_path)
+    except ModelUnavailable as error:
+        raise HTTPException(status_code=503, detail=f"Model unavailable: {error}") from error
 
     # ---- Step B: conservative rule-based decision against saved prescriptions ----
     prescriptions = crud.get_prescriptions_for_patient(db, patient_id)
@@ -211,7 +227,7 @@ async def scan_medicine(
         status=status,
         detectedName=None if ai_result["classifier"]["is_unknown"] else ai_result["classifier"]["label"],
         confidence=ai_result["classifier"]["confidence"],
-        classifier=schemas.ClassifierDetails(label=ai_result["classifier"]["label"], confidence=ai_result["classifier"]["confidence"], margin=ai_result["classifier"]["margin"], isUnknown=ai_result["classifier"]["is_unknown"], reason=ai_result["classifier"]["reason"], catalogVersion=ai_result["classifier"]["catalog_version"]),
+        classifier=schemas.ClassifierDetails(label=ai_result["classifier"]["label"], experimentalLabel=ai_result["classifier"].get("experimental_label"), confidence=ai_result["classifier"]["confidence"], margin=ai_result["classifier"]["margin"], isUnknown=ai_result["classifier"]["is_unknown"], reason=ai_result["classifier"]["reason"], catalogVersion=ai_result["classifier"]["catalog_version"]),
         ocr=schemas.OcrDetails(rawText=ai_result["ocr"]["raw_text"], medicineName=ai_result["ocr"]["medicine_name"], composition=ai_result["ocr"]["composition"], dosage=ai_result["ocr"]["strength"], expiryDate=ai_result["ocr"]["expiry_date"], batchNumber=ai_result["ocr"]["batch_number"], confidence=ai_result["ocr"]["confidence"], isLegible=ai_result["ocr"]["is_legible"], failureReasons=ai_result["ocr"]["failure_reasons"]),
         imageQuality=schemas.ImageQualityDetails(isAcceptable=ai_result["quality"]["is_acceptable"], retakeRequired=ai_result["quality"]["retake_required"], reasons=ai_result["quality"]["reasons"], metrics=ai_result["quality"]["metrics"]),
         matchedPrescription=matched_out,

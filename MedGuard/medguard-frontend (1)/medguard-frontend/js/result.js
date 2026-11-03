@@ -33,10 +33,13 @@ function renderResult(result, image) {
   const badge = document.getElementById("resultBadge"); badge.textContent = info.label; badge.className = "badge " + info.badgeClass;
   document.getElementById("resultMessage").textContent = result.message;
   if (image) document.getElementById("scannedImage").src = image;
-  document.getElementById("detectedName").textContent = valueOrDash(result.detectedName);
+  const experimental = classifier.experimentalLabel;
+  document.getElementById("detectedName").textContent = valueOrDash(result.detectedName || experimental);
   document.getElementById("detectedConfidence").textContent = valueOrDash(classifier.confidence ?? result.confidence) + "%";
   document.getElementById("detectedMargin").textContent = valueOrDash(classifier.margin) + "%";
-  document.getElementById("classifierState").textContent = classifier.isUnknown ? "Unknown — do not guess" : "Recognized";
+  const uncalibrated = classifier.reason === "unknown_calibration_missing";
+  document.getElementById("classifierState").textContent = uncalibrated ? "Experimental only — manual verification required" : (classifier.isUnknown ? "Unknown — do not guess" : "Recognized");
+  document.getElementById("experimentalNotice").hidden = !uncalibrated;
   document.getElementById("ocrName").textContent = valueOrDash(ocr.medicineName);
   document.getElementById("ocrDosage").textContent = valueOrDash(ocr.dosage);
   document.getElementById("ocrExpiry").textContent = valueOrDash(ocr.expiryDate);
@@ -51,5 +54,5 @@ function renderResult(result, image) {
     const p = result.matchedPrescription;
     comparisonEl.textContent = "Matches your prescription for " + p.name + " (" + p.dosage + "), scheduled: " + p.time.join(", ") + ", " + p.frequency + ".";
   } else { comparisonEl.textContent = result.status === "RETAKE_REQUIRED" ? "Could not compare — retake the photo first." : "No verified prescription match is available."; }
-  document.getElementById("page-announcement").textContent = info.label + ". " + result.message + " Detected medicine: " + (result.detectedName || "not identified") + ".";
+  document.getElementById("page-announcement").textContent = info.label + ". " + result.message + " Detected medicine: " + (result.detectedName || experimental || "not identified") + ".";
 }

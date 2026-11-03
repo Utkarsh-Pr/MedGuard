@@ -108,6 +108,7 @@ class OcrDetails(BaseModel):
 
 class ClassifierDetails(BaseModel):
     label: str
+    experimentalLabel: Optional[str] = None
     confidence: float
     margin: float
     isUnknown: bool

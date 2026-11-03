@@ -17,16 +17,11 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # Load variables from the .env file into the environment
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is not set. Copy .env.example to .env and fill in "
-        "your PostgreSQL username/password."
-    )
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medguard.db")
 
 # The "engine" is SQLAlchemy's connection to the actual database.
-engine = create_engine(DATABASE_URL)
+engine_options = {"connect_args": {"check_same_thread": False}} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, **engine_options)
 
 # SessionLocal is a factory that creates a new database session
 # whenever we need to talk to the database (one per API request).

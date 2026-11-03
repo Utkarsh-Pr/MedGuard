@@ -112,6 +112,13 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
+For a self-contained local demo, PostgreSQL is no longer required: when
+`DATABASE_URL` is unset, MedGuard creates `medguard.db` with SQLite. On
+Windows, run `powershell -ExecutionPolicy Bypass -File run_demo.ps1`.
+The local launcher uses the trained PyTorch checkpoint because ONNX Runtime is
+not reliable on this Windows development environment. `/health` confirms that
+the model loaded before the frontend submits a scan.
+
 You should see output ending with something like:
 `Uvicorn running on http://127.0.0.1:8000`
 

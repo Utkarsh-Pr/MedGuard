@@ -15,6 +15,7 @@
 let selectedImageDataUrl = null; // used for on-page + result-page preview
 let selectedImageBlob = null;    // the actual file/blob sent to the backend
 let cameraStream = null;
+const SCAN_TIMEOUT_MS = 30000;
 
 document.addEventListener("DOMContentLoaded", function () {
   const patient = requirePatient();
@@ -120,8 +121,22 @@ async function runScan() {
 
   scanBtn.disabled = true;
   document.getElementById("scanningState").hidden = false;
+  let timeout = null;
 
   try {
+    const healthController = new AbortController();
+    const healthTimeout = window.setTimeout(() => healthController.abort(), 5000);
+    let health;
+    try {
+      health = await fetch(API_BASE_URL + "/health", { signal: healthController.signal });
+    } finally {
+      window.clearTimeout(healthTimeout);
+    }
+    const healthBody = await health.json().catch(() => null);
+    if (!health.ok || !healthBody || !healthBody.ready) {
+      throw new Error("The MedGuard backend or model is not ready. Start the local demo server and try again.");
+    }
+
     const formData = new FormData();
     formData.append("patient_id", patient.id);
     formData.append("image", selectedImageBlob, "scan.jpg");
@@ -130,10 +145,15 @@ async function runScan() {
     // header, which breaks file uploads — so this one call uses
     // fetch() directly and lets the browser set the correct
     // multipart/form-data header (with boundary) itself.
+    const controller = new AbortController();
+    timeout = window.setTimeout(() => controller.abort(), SCAN_TIMEOUT_MS);
     const response = await fetch(API_BASE_URL + "/scan", {
       method: "POST",
       body: formData,
+      signal: controller.signal,
     });
+    window.clearTimeout(timeout);
+    timeout = null;
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
@@ -147,8 +167,13 @@ async function runScan() {
 
     window.location.href = "result.html";
   } catch (err) {
-    alert(err.message);
+    const message = err.name === "AbortError"
+      ? "The scan took too long. Please retry with a clear image or restart the local backend."
+      : err.message;
+    alert(message);
     scanBtn.disabled = false;
     document.getElementById("scanningState").hidden = true;
+  } finally {
+    if (timeout) window.clearTimeout(timeout);
   }
 }
