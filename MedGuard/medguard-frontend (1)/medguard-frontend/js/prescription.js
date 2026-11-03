@@ -12,6 +12,7 @@
    ========================================================= */
 
 let currentPrescriptions = []; // cached list for the logged-in patient
+let ocrDraft = null;
 
 document.addEventListener("DOMContentLoaded", function () {
   const patient = requirePatient();
@@ -27,6 +28,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   form.addEventListener("submit", handleSubmit);
   cancelEditBtn.addEventListener("click", resetForm);
+  document.getElementById("prescriptionImageInput").addEventListener("change", previewPrescriptionImage);
+  document.getElementById("scanPrescriptionBtn").addEventListener("click", scanPrintedPrescription);
+  document.getElementById("ocrReviewForm").addEventListener("submit", saveReviewedCandidates);
 
   renderList();
 });
@@ -38,6 +42,123 @@ function getTimeCheckboxes() {
     evening: document.getElementById("timeEvening"),
     night: document.getElementById("timeNight"),
   };
+}
+
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
+}
+
+function previewPrescriptionImage() {
+  const input = document.getElementById("prescriptionImageInput");
+  const file = input.files[0];
+  const preview = document.getElementById("prescriptionPreview");
+  const wrap = document.getElementById("prescriptionPreviewWrap");
+  document.getElementById("scanPrescriptionBtn").disabled = !file;
+  document.getElementById("ocrReviewSection").hidden = true;
+  if (!file) { wrap.hidden = true; preview.removeAttribute("src"); return; }
+  preview.src = URL.createObjectURL(file);
+  wrap.hidden = false;
+}
+
+async function scanPrintedPrescription() {
+  const patient = getCurrentPatient();
+  const file = document.getElementById("prescriptionImageInput").files[0];
+  const status = document.getElementById("prescriptionOcrState");
+  const button = document.getElementById("scanPrescriptionBtn");
+  if (!file || !patient) return;
+  if (file.size > 10 * 1024 * 1024) { status.textContent = "Choose an image under 10 MB."; return; }
+  button.disabled = true;
+  status.textContent = "Reading printed prescription…";
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  const data = new FormData();
+  data.append("patient_id", patient.id);
+  data.append("image", file);
+  try {
+    const response = await fetch(API_BASE_URL + "/prescriptions/ocr", { method: "POST", body: data, signal: controller.signal });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const detail = body.detail;
+      const message = typeof detail === "object" ? (detail.message || (detail.reasons || []).join(", ")) : detail;
+      throw new Error(message || "Could not read this prescription photo.");
+    }
+    ocrDraft = body;
+    renderOcrDraft(body);
+    status.textContent = "Draft ready. Review every field before saving.";
+  } catch (error) {
+    status.textContent = error.name === "AbortError" ? "The scan took over 30 seconds. Check the backend and try a clearer photo." : error.message;
+  } finally {
+    clearTimeout(timeout);
+    button.disabled = false;
+  }
+}
+
+function renderOcrDraft(draft) {
+  const section = document.getElementById("ocrReviewSection");
+  const list = document.getElementById("ocrCandidateList");
+  const warnings = document.getElementById("ocrWarnings");
+  document.getElementById("ocrRawText").textContent = draft.rawText || "No text returned.";
+  warnings.textContent = (draft.warnings || []).join(" ");
+  warnings.hidden = !draft.warnings || draft.warnings.length === 0;
+  list.innerHTML = "";
+  draft.candidates.forEach((candidate, index) => {
+    const times = candidate.time || [];
+    const card = document.createElement("article");
+    card.className = "ocr-candidate";
+    card.dataset.index = index;
+    card.innerHTML = `
+      <div class="row"><h3 style="flex:1">Candidate ${index + 1}</h3><button type="button" class="btn btn-secondary remove-ocr-candidate">Remove</button></div>
+      <p class="text-muted">OCR confidence: ${Math.round((candidate.confidence || 0) * 100)}% · Source: ${escapeHtml(candidate.rawLine)}</p>
+      <div class="form-group"><label>Medicine name <input class="ocr-name" required value="${escapeHtml(candidate.medicineName)}" /></label></div>
+      <div class="row">
+        <div class="form-group" style="flex:1"><label>Strength / dosage <input class="ocr-dosage" required value="${escapeHtml(candidate.dosage)}" /></label></div>
+        <div class="form-group" style="flex:1"><label>Tablets per dose <input class="ocr-tablets" type="number" min="1" step="1" required value="${candidate.tablets || ""}" /></label></div>
+      </div>
+      <fieldset><legend>Time of day (required)</legend>${["morning", "afternoon", "evening", "night"].map((time) => `<span class="checkbox-row"><input class="ocr-time" type="checkbox" value="${time}" ${times.includes(time) ? "checked" : ""}/><label style="margin:0">${time[0].toUpperCase() + time.slice(1)}</label></span>`).join("")}</fieldset>
+      <div class="form-group"><label>Frequency <select class="ocr-frequency" required>${["", "Once daily", "Twice daily", "Thrice daily", "As needed"].map((value) => `<option value="${value}" ${candidate.frequency === value ? "selected" : ""}>${value || "Select frequency"}</option>`).join("")}</select></label></div>
+      <div class="row"><div class="form-group" style="flex:1"><label>Start date <input class="ocr-start" type="date" required value="${escapeHtml(candidate.startDate)}" /></label></div><div class="form-group" style="flex:1"><label>End date <input class="ocr-end" type="date" required value="${escapeHtml(candidate.endDate)}" /></label></div></div>
+      ${candidate.courseDays ? `<p class="text-muted">OCR read a course of ${candidate.courseDays} days. Confirm the dates with the prescription.</p>` : ""}
+      ${candidate.instructions ? `<p class="text-muted">OCR note: ${escapeHtml(candidate.instructions)}</p>` : ""}
+      ${(candidate.warnings || []).length ? `<p class="ocr-candidate-warning">${escapeHtml(candidate.warnings.join(" "))}</p>` : ""}`;
+    card.querySelector(".remove-ocr-candidate").addEventListener("click", () => card.remove());
+    list.appendChild(card);
+  });
+  section.hidden = false;
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function saveReviewedCandidates(event) {
+  event.preventDefault();
+  const cards = Array.from(document.querySelectorAll(".ocr-candidate"));
+  if (!cards.length) { alert("Keep at least one candidate or use the manual form below."); return; }
+  const patient = getCurrentPatient();
+  const prepared = [];
+  for (const card of cards) {
+    const times = Array.from(card.querySelectorAll(".ocr-time:checked")).map((input) => input.value);
+    if (!times.length) { alert("Choose at least one time of day for every reviewed medicine."); return; }
+    const prescription = {
+      name: card.querySelector(".ocr-name").value.trim(), dosage: card.querySelector(".ocr-dosage").value.trim(),
+      tablets: Number(card.querySelector(".ocr-tablets").value), time: times,
+      frequency: card.querySelector(".ocr-frequency").value, startDate: card.querySelector(".ocr-start").value,
+      endDate: card.querySelector(".ocr-end").value,
+    };
+    if (!prescription.name || !prescription.dosage || !prescription.tablets || !prescription.frequency || !prescription.startDate || !prescription.endDate) {
+      alert("Complete every reviewed field before saving."); return;
+    }
+    prepared.push(prescription);
+  }
+  const button = document.getElementById("saveOcrCandidatesBtn");
+  button.disabled = true;
+  try {
+    for (const prescription of prepared) await apiRequest("/prescriptions", { method: "POST", body: JSON.stringify(toApiPayload(prescription, patient.id)) });
+    document.getElementById("ocrReviewSection").hidden = true;
+    document.getElementById("prescriptionOcrState").textContent = "Reviewed medicines saved.";
+    await renderList();
+  } catch (error) {
+    alert("Could not save reviewed medicine: " + error.message);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 // ---- Field-name mapping between this page and the FastAPI backend ----

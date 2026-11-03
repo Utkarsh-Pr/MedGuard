@@ -61,6 +61,29 @@ class PrescriptionOut(PrescriptionBase):
         from_attributes = True
 
 
+class PrescriptionOcrCandidate(BaseModel):
+    medicineName: Optional[str] = None
+    dosage: Optional[str] = None
+    tablets: Optional[int] = None
+    time: List[str] = []
+    frequency: Optional[str] = None
+    startDate: Optional[date] = None
+    endDate: Optional[date] = None
+    courseDays: Optional[int] = None
+    instructions: Optional[str] = None
+    confidence: float
+    rawLine: str
+    warnings: List[str] = []
+
+
+class PrescriptionOcrDraft(BaseModel):
+    rawText: str
+    confidence: float
+    candidates: List[PrescriptionOcrCandidate]
+    warnings: List[str]
+    imageQuality: dict
+
+
 # ---------- Scan history ----------
 
 class ScanHistoryCreate(BaseModel):

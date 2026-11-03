@@ -428,6 +428,12 @@ legend { font-weight: 700; padding: 0 var(--space-1); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- Prescription OCR review ---------- */
+.ocr-candidate { border: 1px solid var(--color-border); border-radius: var(--radius); padding: var(--space-2); margin: var(--space-2) 0; }
+.ocr-candidate h3 { margin-top: 0; }
+.ocr-candidate-warning, .status-warning { color: #8a4b00; }
+.ocr-raw-text { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--color-bg); padding: var(--space-2); border-radius: var(--radius); }
+
 /* ---------- Settings ---------- */
 .settings-row {
   display: flex;

@@ -37,8 +37,8 @@ import crud
 import models  # noqa: F401 — imported so Base knows about all the tables below
 import schemas
 from ai.classifier import ModelUnavailable, classify_medicine, model_status
-from ai.image_quality import check_image_quality
-from ai.ocr import extract_text
+from ai.image_quality import check_document_quality, check_image_quality
+from ai.ocr import OcrEngineUnavailable, extract_prescription_text, extract_text
 from ai.safety import decide_safety
 from database import Base, engine, get_db
 from sqlalchemy import text
@@ -52,6 +52,8 @@ Base.metadata.create_all(bind=engine)
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 app = FastAPI(title="MedGuard API", description="AI-Powered Medication Safety Assistant — backend")
 
@@ -119,6 +121,62 @@ def delete_prescription(prescription_id: int, db: Session = Depends(get_db)):
     if not deleted:
         raise HTTPException(status_code=404, detail="Prescription not found")
     return {"message": "Prescription deleted successfully"}
+
+
+@app.post("/prescriptions/ocr", response_model=schemas.PrescriptionOcrDraft)
+async def ocr_prescription(
+    patient_id: int = Form(...),
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Return a transient review draft from a printed English prescription.
+
+    This route has no database writes. The browser must send each reviewed row
+    through POST /prescriptions before it becomes part of the patient's list.
+    """
+    if not crud.get_patient(db, patient_id):
+        raise HTTPException(status_code=404, detail="Patient not found")
+    if image.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=415, detail="Use a JPEG, PNG, or WebP prescription photo. PDFs and handwriting are not supported.")
+
+    extension = os.path.splitext(image.filename or "")[1].lower()
+    if extension not in {".jpg", ".jpeg", ".png", ".webp"}:
+        extension = ".jpg"
+    saved_path = os.path.join(UPLOAD_DIR, f"prescription-{uuid.uuid4().hex}{extension}")
+    total = 0
+    try:
+        with open(saved_path, "wb") as buffer:
+            while chunk := await image.read(1024 * 1024):
+                total += len(chunk)
+                if total > MAX_UPLOAD_BYTES:
+                    raise HTTPException(status_code=413, detail="Image is too large. Maximum size is 10 MB.")
+                buffer.write(chunk)
+    except HTTPException:
+        if os.path.exists(saved_path): os.remove(saved_path)
+        raise
+
+    quality = check_document_quality(saved_path)
+    if not quality["is_acceptable"]:
+        raise HTTPException(status_code=422, detail={"message": "Prescription photo needs a retake.", "reasons": quality["reasons"], "imageQuality": quality})
+    try:
+        draft = extract_prescription_text(saved_path)
+    except OcrEngineUnavailable as error:
+        raise HTTPException(status_code=503, detail="Prescription OCR is unavailable. Use manual entry or start the demo with PaddleOCR installed.") from error
+
+    if not draft["raw_text"]:
+        raise HTTPException(status_code=422, detail={"message": "No readable printed text found. Handwritten prescriptions require manual entry.", "warnings": draft["warnings"]})
+    if not draft["candidates"]:
+        raise HTTPException(status_code=422, detail={"message": "No medicine entries were detected. Review the photo or enter medicines manually.", "rawText": draft["raw_text"], "warnings": draft["warnings"]})
+    return schemas.PrescriptionOcrDraft(
+        rawText=draft["raw_text"], confidence=draft["confidence"],
+        candidates=[schemas.PrescriptionOcrCandidate(
+            medicineName=c["medicine_name"], dosage=c["strength"], tablets=c["tablets"], time=c["time"],
+            frequency=c["frequency"], startDate=c["start_date"], endDate=c["end_date"],
+            courseDays=c["course_days"], instructions=c["instructions"], confidence=c["confidence"],
+            rawLine=c["raw_line"], warnings=c["warnings"],
+        ) for c in draft["candidates"]],
+        warnings=draft["warnings"], imageQuality=quality,
+    )
 
 
 # =================================================================

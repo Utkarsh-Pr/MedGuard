@@ -35,6 +35,38 @@
       this list to check medicines you scan later.
     </p>
 
+    <section class="card" aria-labelledby="ocrHeading">
+      <h2 id="ocrHeading">Scan Printed Prescription</h2>
+      <p class="text-muted">Upload a clear photo of an English printed prescription. OCR is only a draft: review and edit every field before saving. Handwritten prescriptions need manual entry.</p>
+      <div class="stack">
+        <div class="form-group">
+          <label for="prescriptionImageInput">Prescription photo</label>
+          <input id="prescriptionImageInput" type="file" accept="image/jpeg,image/png,image/webp" />
+        </div>
+        <div id="prescriptionPreviewWrap" class="preview-wrap" hidden>
+          <img id="prescriptionPreview" alt="Selected prescription preview" />
+        </div>
+        <button id="scanPrescriptionBtn" type="button" class="btn btn-primary" disabled>Scan Printed Prescription</button>
+        <p id="prescriptionOcrState" class="text-muted" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="ocrReviewSection" class="card" aria-labelledby="reviewHeading" hidden>
+      <h2 id="reviewHeading">Review OCR Draft</h2>
+      <p class="text-muted">Nothing below has been saved. Correct every field, choose at least one timing slot, then save the entries you accept.</p>
+      <p id="ocrWarnings" class="status-warning" hidden></p>
+      <form id="ocrReviewForm" class="stack">
+        <div id="ocrCandidateList"></div>
+        <div class="form-actions">
+          <button id="saveOcrCandidatesBtn" type="submit" class="btn btn-primary">Save Reviewed Medicines</button>
+        </div>
+      </form>
+      <details>
+        <summary>Show raw OCR text</summary>
+        <pre id="ocrRawText" class="ocr-raw-text"></pre>
+      </details>
+    </section>
+
     <section class="card" aria-labelledby="formHeading">
       <h2 id="formHeading">
         <span id="formModeLabel">Add a Medicine</span>

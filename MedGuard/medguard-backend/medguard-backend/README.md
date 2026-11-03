@@ -187,6 +187,23 @@ curl -X POST http://localhost:8000/scan \
 curl http://localhost:8000/history/1
 ```
 
+## Printed prescription photo OCR
+
+`POST /prescriptions/ocr` accepts a **JPEG, PNG, or WebP photo** with
+`patient_id` and `image` form fields. It performs document-quality checks and
+English PaddleOCR, then returns an editable draft only. It never creates a
+prescription record. The browser must send each reviewed candidate to
+`POST /prescriptions` to save it.
+
+The draft retains raw text, OCR confidence, source row, and warnings. It can
+recognize common printed patterns such as `1-0-1`, `OD`, `BD`, `TDS`,
+`after meals`, `for 5 days`, and labelled `DD/MM/YYYY` dates. Ambiguous timing
+and missing fields are deliberately left blank for the user to review.
+
+PaddleOCR is listed in `requirements.txt`. If it is not installed or cannot
+start, this endpoint returns a quick `503` response; handwritten prescriptions,
+PDFs, and unreadable photos should be entered manually in this first release.
+
 ## Training and deploying the medicine model
 
 The model is deliberately closed-set: an image is a catalog medicine only when
